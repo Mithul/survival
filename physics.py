@@ -11,6 +11,7 @@ class Physics(object):
 		self.velx = 0.0
 		self.vely = 0.0
 		self.last_moved = time.time()
+		self.last_collision_check = time.time()
 
 	def reset_time(self):
 		self.last_moved = time.time()
@@ -22,7 +23,7 @@ class Physics(object):
 
 	def move(self):
 		t = self.get_time()
-		print self.x, self.y, self.velx, self.vely, self.fx, self.fy, t, self.fy*t
+		# print self.x, self.y, self.velx, self.vely, self.fx, self.fy, t, self.fy*t
 		new_x = self.x + self.velx*t + 0.5*t**2*self.fx
 		new_y = self.y + self.vely*t + 0.5*t**2*self.fy
 		self.x=new_x
@@ -54,6 +55,12 @@ class Physics(object):
 		self.fy = self.fy + fy
 
 	def collide(self, angle):
+		if time.time()-self.last_collision_check < 0.1:
+			print 'Too soon'
+			return
+
+		mangle = math.radians(angle)
+		mangle90 = math.radians(90-angle)
 		angle = math.atan2(self.vely, self.velx) - math.radians(angle%90)
 		# angle_90 = math.radians(90-angle)
 		# angle = math.atan2(self.vely, self.velx)
@@ -61,20 +68,23 @@ class Physics(object):
 		angle_deg = math.degrees(angle)
 		nvelx = self.velx
 		nvely = self.vely
-		if angle_deg >= 0 and angle_deg < 90:
-			 nvelx = -self.velx
-		elif angle_deg >= 90:
-			 nvely = -self.vely
-		elif angle_deg < -90 :
-			 nvelx = -self.velx
+		if angle_deg > 90:
+			nvelx = self.velx*math.cos(mangle)# + self.vely*math.sin(angle)
+		elif angle_deg <= 90 and angle_deg > 0:
+			nvely = -self.vely*math.sin(mangle)# + self.velx*math.cos(angle)
+		elif angle_deg <= -90 :
+			nvely = self.vely*math.sin(mangle)# + self.velx*math.cos(angle)
 		else: #angle_deg < -90:
-			 nvely = -self.vely
+			nvelx = -self.velx*math.cos(mangle)# + self.vely*math.sin(angle)
 		# nvelx = -(abs(self.velx)*math.cos(angle))# - self.vely*math.cos(angle))
 		# nvely = -(abs(self.vely)*math.sin(angle))# + self.velx*math.cos(angle))
 
 		self.velx = nvelx
 		self.vely = nvely
-		print math.degrees(angle), self.velx, self.vely
+		print 'collide',self.name, math.degrees(angle), math.degrees(mangle), self.velx, self.vely
+		self.last_collision_check = time.time()
+		# if angle_deg%90==0:
+		# 	1/0
 
 	def get_pos(self):
 		return self.x, self.y
