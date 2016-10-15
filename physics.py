@@ -54,14 +54,27 @@ class Physics(object):
 		self.fy = self.fy + fy
 
 	def collide(self, angle):
-		angle = math.radians(angle)
-		angle_180 = math.radians(180-angle)
-		print angle, self.velx*math.cos(angle), self.velx*math.sin(angle)
-		nvelx = (-self.velx*math.sin(angle) - self.vely*math.cos(angle))
-		nvely = (-abs(self.vely)*math.sin(angle) + self.velx*math.cos(angle))
+		angle = math.atan2(self.vely, self.velx) - math.radians(angle%90)
+		# angle_90 = math.radians(90-angle)
+		# angle = math.atan2(self.vely, self.velx)
+		# angle_180 = math.radians(180-math.degrees(angle))
+		angle_deg = math.degrees(angle)
+		nvelx = self.velx
+		nvely = self.vely
+		if angle_deg >= 0 and angle_deg < 90:
+			 nvelx = -self.velx
+		elif angle_deg >= 90:
+			 nvely = -self.vely
+		elif angle_deg < -90 :
+			 nvelx = -self.velx
+		else: #angle_deg < -90:
+			 nvely = -self.vely
+		# nvelx = -(abs(self.velx)*math.cos(angle))# - self.vely*math.cos(angle))
+		# nvely = -(abs(self.vely)*math.sin(angle))# + self.velx*math.cos(angle))
 
 		self.velx = nvelx
 		self.vely = nvely
+		print math.degrees(angle), self.velx, self.vely
 
 	def get_pos(self):
 		return self.x, self.y
