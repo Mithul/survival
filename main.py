@@ -1,6 +1,7 @@
 from Tkinter import *
 import time
 from bot import Bot
+import random
 
 def animator(bots):
 	collision_check = {}
@@ -16,8 +17,67 @@ def animator(bots):
 			if c:
 				pass
 				# print bot.name, bot1.name
+		surr = bot.surroundings(bots)
+		nn_input = [[bot.velx, bot.vely, bot.fx, bot.fy, bot.health/100, surr['l'], surr['u'], surr['r'], surr['d']]]
+		
+		fx = 0
+		fy = 0
+		if random.random() > 0.5:
+			score = [-1, 10, -1, -1, 10, -1]
+			score = np.reshape(np.asarray(score),[-1,6])
+			res = sess.run([bot.thrusters], {bot.input_nn: nn_input, bot.score: score})
+			# res = sess.run([bot.thrusters, bot.train_step], {bot.input_nn: nn_input, bot.score: score})
+			thrust = res[0][0]
+			i = np.argmax(thrust)
+			print i
+			if i==0:
+				fx = -0.5
+			elif i==2:
+				fx = 0.5
+			elif i==3:
+				fy = -0.5
+			elif i==5:
+				fy = 0.5
+			# print bot.x, bot.y
+			# bot.add_fx(res[0][0][0])
+			# bot.add_fy(res[0][0][1])
+			
+		else:
+			fx = random.random()-0.5
+			fy = random.random()-0.5
+
 		bot.animate()
-	canvas.after(10, animator,bots)
+
+		# print fx,fy
+		bot.add_fx(fx)
+		bot.add_fy(fy)
+
+		if bot.collisions > 0:
+			import pdb
+			score = [0, 0, 0, 0, 0, 0]
+			if nn_input[0][0]*bot.velx > 0:
+				score[1] = 10
+			if nn_input[0][1]*bot.vely > 0:
+				score[4] = 10
+			if nn_input[0][0]*bot.velx < 0 and bot.velx < 0:
+				score[0] = 50
+			if nn_input[0][0]*bot.velx < 0 and bot.velx > 0:
+				score[2] = 50
+			if nn_input[0][1]*bot.vely < 0 and bot.vely < 0:
+				score[3] = 50
+			if nn_input[0][1]*bot.vely < 0 and bot.vely > 0:
+				score[5] = 50
+			print score
+			i=np.argmax(score)
+			score = np.reshape(np.asarray(score),[-1,6])
+			res = sess.run([bot.thrusters, bot.train_step, bot.loss, bot.input_nn], {bot.input_nn: nn_input, bot.score: score})
+			
+			# bot.add_fx(res[0][0][0])
+			# bot.add_fy(res[0][0][1])
+			print 'r', bot.name, bot.collisions, res[0][0], res[2], i
+			bot.reset_collisions()
+
+	canvas.after(1, animator,bots)
 import tensorflow as tf
 import numpy as np
 sess = tf.Session()
@@ -47,14 +107,16 @@ canvas = Canvas(root, width=400, height = 400)
 canvas.pack()
 import random
 bots = []
-for i in xrange(2):
-	bot = Bot(40, i*90, 40, 50, canvas, str(i))
+print 'Setting up'
+for i in xrange(1):
+	bot = Bot(100, i*90, 40, 50, canvas, str(i))
 	bot.add_fx(0.1)
 	bot.add_fy(0.1)
 	bot.setup_nn()
 	bots.append(bot)
+print 'Setting up done'
 
 sess.run(tf.initialize_all_variables())
 animator(bots)
-canvas.after(100, test, bots)
+# canvas.after(100, test, bots)
 root.mainloop()

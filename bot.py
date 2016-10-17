@@ -82,24 +82,29 @@ class Bot(Physics):
 
 	def setup_nn(self):
 		input_size = 9
+		layers = [20,10]
+		output_size = 6
 		with tf.variable_scope('bot_'+self.name):
 			input = tf.placeholder(tf.float32, shape=[None,input_size], name="input")
-			score = tf.placeholder(tf.float32,shape=[None,2], name="score")
-			w1 = tf.Variable(tf.random_normal([input_size,5]))
-			b1 = tf.Variable(tf.random_normal([5]))
-			op1 = tf.tanh(tf.matmul(input,w1)+b1)
-			w2 = tf.Variable(tf.random_normal([5,2]))
-			b2 = tf.Variable(tf.random_normal([2]))
-			op2 = tf.tanh(tf.matmul(op1,w2)+b2)
-			w3 = tf.Variable(tf.zeros([2,1]))
-			b3 = tf.Variable(tf.zeros([1]))
-			pred = tf.tanh(tf.matmul(op2,w3)+b3)
-			optimizer = tf.train.GradientDescentOptimizer(0.1)
-			loss_m = -tf.reduce_sum(op2-score)
+			score = tf.placeholder(tf.float32,shape=[None,output_size], name="score")
+			prev_input = input
+			for i, size in enumerate(layers):
+				w = tf.Variable(tf.random_uniform([input_size,size]), name="hidden_"+str(i))
+				b = tf.Variable(tf.random_uniform([size]), name="hidden_"+str(i))
+				output = tf.sigmoid(tf.matmul(prev_input,w)+b)
+				prev_input = output
+				input_size = size
+			
+			ws = tf.Variable(tf.zeros([input_size,output_size]))
+			bs = tf.Variable(tf.zeros([output_size]))
+			pred = tf.nn.softmax(tf.matmul(output,ws)+bs)
+			optimizer = tf.train.AdagradOptimizer(0.1)
+
+			loss_m = tf.reduce_mean(-tf.reduce_sum(score * tf.log(tf.maximum(pred,pred + 1e-10)), reduction_indices=[1]))
 			train_step = optimizer.minimize(loss_m)
 
-			self.op1 = op1
-			self.thrusters = op2
+			self.op1 = output
+			self.thrusters = pred
 			self.train_step = train_step
 			self.loss = loss_m
 			self.input_nn = input
