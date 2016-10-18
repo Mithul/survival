@@ -3,10 +3,10 @@ import math
 import tensorflow as tf
 
 class Bot(Physics):
-	def __init__(self, x, y, radius, scale, canvas, name='1'):
+	def __init__(self, x, y, radius, scale, canvas, name='1', color='blue'):
 		super(Bot,self).__init__(scale, x, y)
 		self.canvas = canvas
-		self.character = self.canvas.create_oval(x-radius, y-radius, x+radius, y+radius, outline='white', fill='blue')
+		self.character = self.canvas.create_oval(x-radius, y-radius, x+radius, y+radius, outline='white', fill=color)
 		self.canvas.pack()
 		self.radius = radius
 		self.name = name
@@ -16,11 +16,11 @@ class Bot(Physics):
 	def move(self):
 		old_pos = self.get_pos()
 
-		if old_pos[0] > 400:
+		if old_pos[0] > self.canvas.winfo_width():
 			self.collide(0)
 		if old_pos[0] < 0:
 			self.collide(0)
-		if old_pos[1] > 400:
+		if old_pos[1] > self.canvas.winfo_height():
 			self.collide(90)
 		if old_pos[1] < 0:
 			self.collide(-90)
@@ -41,23 +41,23 @@ class Bot(Physics):
 			if bot == self:
 				continue
 			if bot.x < self.x:
-				surr['l'] = surr['l']+1
+				surr['l'] = surr['l']+(((bot.x-self.x)**2) + ((bot.y-self.y)**2))/(2*(400**2))
 			else:
-				surr['r'] = surr['r']+1
+				surr['r'] = surr['r']+(((bot.x-self.x)**2) + ((bot.y-self.y)**2))/(2*(400**2))
 			if bot.y < self.y:
-				surr['u'] = surr['u']+1
+				surr['u'] = surr['u']+(((bot.x-self.x)**2) + ((bot.y-self.y)**2))/(2*(400**2))
 			else:
-				surr['d'] = surr['d']+1
+				surr['d'] = surr['d']+(((bot.x-self.x)**2) + ((bot.y-self.y)**2))/(2*(400**2))
 		threshold = 20
 		if True:
 		# if self.x > 400-threshold:
-			surr['r'] = surr['r']+(self.x)/400
+			surr['r'] = surr['r']+(self.x)/self.canvas.winfo_width()
 		# if self.x < threshold:
-			surr['l'] = surr['l']+(400-self.x)/400
+			surr['l'] = surr['l']+(self.canvas.winfo_width()-self.x)/self.canvas.winfo_width()
 		# if self.y > 400-threshold:
-			surr['d'] = surr['d']+(self.y)/400
+			surr['d'] = surr['d']+(self.y)/self.canvas.winfo_height()
 		# if self.y < threshold:
-			surr['u'] = surr['u']+(400-self.y)/400
+			surr['u'] = surr['u']+(self.canvas.winfo_height()-self.y)/self.canvas.winfo_height()
 		return surr
 
 	def collision_detect(self, obj):
@@ -82,7 +82,7 @@ class Bot(Physics):
 
 	def setup_nn(self):
 		input_size = 9
-		layers = [20,10]
+		layers = [8,8,8,8,8]
 		output_size = 6
 		with tf.variable_scope('bot_'+self.name):
 			input = tf.placeholder(tf.float32, shape=[None,input_size], name="input")

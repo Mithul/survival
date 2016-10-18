@@ -76,6 +76,8 @@ def animator(bots):
 			# bot.add_fy(res[0][0][1])
 			print 'r', bot.name, bot.collisions, res[0][0], res[2], i
 			bot.reset_collisions()
+		if bot.scale < 10:
+			bot.scale = bot.scale+0.01
 
 	canvas.after(1, animator,bots)
 import tensorflow as tf
@@ -103,13 +105,26 @@ def test(bots):
 
 
 root = Tk()
-canvas = Canvas(root, width=400, height = 400)
+# f = Frame(root, height=400, width=400)
+# f.pack_propagate(0)
+# f.pack()
+canvas = Canvas(root, width=1280, height = 720)
+# f = Frame(root, height=30, width=400)
+# f.pack_propagate(0)
+# f.pack()
 canvas.pack()
 import random
 bots = []
 print 'Setting up'
-for i in xrange(1):
-	bot = Bot(100, i*90, 40, 50, canvas, str(i))
+colors = ['#f00','#0f0','#00f','#ff0','#f0f','#0ff','#fff','#000','#800','#080','#008','#880','#808','#088','#888']
+from functools import partial
+def delete_bot(bot):
+	bots.remove(bot)
+for i in xrange(15):
+	bot = Bot(50+(i%2)*100 + i/5*200, (i%5)*90, 20, 1, canvas, str(i), color=colors[i])
+	action_with_arg = partial(delete_bot,bot)
+	b = Button(root, text="OK", command=action_with_arg, bg=colors[i])
+	b.pack()
 	bot.add_fx(0.1)
 	bot.add_fy(0.1)
 	bot.setup_nn()
