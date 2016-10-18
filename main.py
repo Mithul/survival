@@ -3,7 +3,9 @@ import time
 from bot import Bot
 import random
 
+frame = 0
 def animator(bots):
+	global frame
 	collision_check = {}
 	for bot in bots:
 		collision_check[bot] = []
@@ -47,7 +49,9 @@ def animator(bots):
 			fy = random.random()-0.5
 
 		bot.animate()
-
+		if frame%10 == 0:
+			canvas.postscript(file="frames/frame_"+str(frame/10)+".ps", colormode='color')
+		frame = frame + 1
 		# print fx,fy
 		bot.add_fx(fx)
 		bot.add_fy(fy)
