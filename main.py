@@ -7,9 +7,16 @@ frame = 0
 def animator(bots):
 	global frame
 	collision_check = {}
+	restart = False
 	for bot in bots:
+		if bot.health < 0:
+			continue
+		restart = True
+		print bot.name, bot.health
 		collision_check[bot] = []
 		for bot1 in bots:
+			if bot1.health < 0:
+				continue
 			if bot==bot1:
 				continue
 			if (bot in collision_check and (bot1 in collision_check[bot])) or (bot1 in collision_check and (bot in collision_check[bot1])):
@@ -31,7 +38,7 @@ def animator(bots):
 			# res = sess.run([bot.thrusters, bot.train_step], {bot.input_nn: nn_input, bot.score: score})
 			thrust = res[0][0]
 			i = np.argmax(thrust)
-			print i
+			# print i
 			if i==0:
 				fx = -0.5
 			elif i==2:
@@ -82,10 +89,11 @@ def animator(bots):
 			# bot.add_fy(res[0][0][1])
 			print 'r', bot.name, bot.collisions, res[0][0], res[2], i
 			bot.reset_collisions()
-		if bot.scale < 50:
+		if bot.scale < 90:
 			bot.scale = bot.scale+0.01
 
-	canvas.after(1, animator,bots)
+	if restart:
+		canvas.after(1, animator,bots)
 import tensorflow as tf
 import numpy as np
 sess = tf.Session()
@@ -111,6 +119,8 @@ def test(bots):
 
 
 root = Tk()
+bottom = Frame(root)
+bottom.pack(side=BOTTOM, fill=BOTH, expand=True)
 # f = Frame(root, height=400, width=400)
 # f.pack_propagate(0)
 # f.pack()
@@ -125,12 +135,13 @@ print 'Setting up'
 colors = ['#f00','#0f0','#00f','#ff0','#f0f','#0ff','#fff','#000','#800','#080','#008','#880','#808','#088','#888']
 from functools import partial
 def delete_bot(bot):
+	canvas.delete(bot.character)
 	bots.remove(bot)
 for i in xrange(15):
 	bot = Bot(50+(i%2)*100 + i/5*200, (i%5)*90, 20, 1, canvas, str(i), color=colors[i])
 	action_with_arg = partial(delete_bot,bot)
-	b = Button(root, text="OK", command=action_with_arg, bg=colors[i])
-	b.pack()
+	b = Button(bottom, text="OK", command=action_with_arg, bg=colors[i])
+	b.grid(row=0,column=i)
 	bot.add_fx(0.1)
 	bot.add_fy(0.1)
 	bot.setup_nn()

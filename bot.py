@@ -3,7 +3,7 @@ import math
 import tensorflow as tf
 
 class Bot(Physics):
-	def __init__(self, x, y, radius, scale, canvas, name='1', color='blue'):
+	def __init__(self, x, y, radius, scale, canvas, name='1', color='blue', health = 100.0):
 		super(Bot,self).__init__(scale, x, y)
 		self.canvas = canvas
 		self.character = self.canvas.create_oval(x-radius, y-radius, x+radius, y+radius, outline='white', fill=color)
@@ -11,7 +11,7 @@ class Bot(Physics):
 		self.radius = radius
 		self.name = name
 		self.collisions = 0
-		self.health = 100
+		self.health = health
 
 	def move(self):
 		old_pos = self.get_pos()
@@ -28,12 +28,16 @@ class Bot(Physics):
 		new_pos = Physics.move(self)
 		self.canvas.move(self.character, new_pos[0] - old_pos[0], new_pos[1] - old_pos[1])
 		self.canvas.update()
-		import pdb
-		# pdb.set_trace()
+		self.health = self.health - 0.01
+		if self.health < 0:
+			self.canvas.delete(self.character)
 
 	def collide(self, arg, obj=None):
 		super(Bot, self).collide(arg, obj)
 		self.collisions = self.collisions + 1
+		self.health = self.health - 1
+		if obj is not None:
+			obj.health = obj.health - 1
 
 	def surroundings(self, bots):
 		surr = {'l':0, 'r':0, 'u':0, 'd':0}
