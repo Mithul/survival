@@ -8,11 +8,13 @@ def animator(bots):
 	global frame
 	collision_check = {}
 	restart = False
+	bot_healths = ""
 	for bot in bots:
 		if bot.health < 0:
 			continue
 		restart = True
-		print bot.name, bot.health
+		# print ' bot '+bot.name, bot.health
+		bot_healths = bot_healths + bot.name + ':' + "%7.2f"%bot.health + ' '
 		collision_check[bot] = []
 		for bot1 in bots:
 			if bot1.health < 0:
@@ -80,18 +82,18 @@ def animator(bots):
 				score[3] = 50
 			if nn_input[0][1]*bot.vely < 0 and bot.vely > 0:
 				score[5] = 50
-			print score
+			# print score
 			i=np.argmax(score)
 			score = np.reshape(np.asarray(score),[-1,6])
 			res = sess.run([bot.thrusters, bot.train_step, bot.loss, bot.input_nn], {bot.input_nn: nn_input, bot.score: score})
 			
 			# bot.add_fx(res[0][0][0])
 			# bot.add_fy(res[0][0][1])
-			print 'r', bot.name, bot.collisions, res[0][0], res[2], i
+			# print 'r', bot.name, bot.collisions, res[0][0], res[2], i
 			bot.reset_collisions()
 		if bot.scale < 90:
 			bot.scale = bot.scale+0.01
-
+	print bot_healths
 	if restart:
 		canvas.after(1, animator,bots)
 import tensorflow as tf

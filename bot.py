@@ -3,7 +3,7 @@ import math
 import tensorflow as tf
 
 class Bot(Physics):
-	def __init__(self, x, y, radius, scale, canvas, name='1', color='blue', health = 100.0):
+	def __init__(self, x, y, radius, scale, canvas, name='1', color='blue', health = 100000.0):
 		super(Bot,self).__init__(scale, x, y)
 		self.canvas = canvas
 		self.character = self.canvas.create_oval(x-radius, y-radius, x+radius, y+radius, outline='white', fill=color)
