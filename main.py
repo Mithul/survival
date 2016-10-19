@@ -49,8 +49,10 @@ def animator(bots):
 			fy = random.random()-0.5
 
 		bot.animate()
-		if frame%10 == 0:
-			canvas.postscript(file="frames/frame_"+str(frame/10)+".ps", colormode='color')
+		freq = 1000
+		if frame%freq == 0:
+			pass
+			# canvas.postscript(file="frames/frame_"+str(frame/freq)+".ps", colormode='color')
 		frame = frame + 1
 		# print fx,fy
 		bot.add_fx(fx)
@@ -80,7 +82,7 @@ def animator(bots):
 			# bot.add_fy(res[0][0][1])
 			print 'r', bot.name, bot.collisions, res[0][0], res[2], i
 			bot.reset_collisions()
-		if bot.scale < 10:
+		if bot.scale < 50:
 			bot.scale = bot.scale+0.01
 
 	canvas.after(1, animator,bots)

@@ -16,13 +16,13 @@ class Bot(Physics):
 	def move(self):
 		old_pos = self.get_pos()
 
-		if old_pos[0] > self.canvas.winfo_width():
+		if old_pos[0] > self.canvas.winfo_width() and self.velx > 0:
 			self.collide(0)
-		if old_pos[0] < 0:
+		if old_pos[0] < 0 and self.velx < 0:
 			self.collide(0)
-		if old_pos[1] > self.canvas.winfo_height():
+		if old_pos[1] > self.canvas.winfo_height() and self.vely > 0:
 			self.collide(90)
-		if old_pos[1] < 0:
+		if old_pos[1] < 0 and self.vely < 0:
 			self.collide(-90)
 
 		new_pos = Physics.move(self)
@@ -41,13 +41,13 @@ class Bot(Physics):
 			if bot == self:
 				continue
 			if bot.x < self.x:
-				surr['l'] = surr['l']+(((bot.x-self.x)**2) + ((bot.y-self.y)**2))/(2*(400**2))
+				surr['l'] = surr['l']+(((bot.x-self.x)**2) + ((bot.y-self.y)**2))/(2*(self.canvas.winfo_width()**2))
 			else:
-				surr['r'] = surr['r']+(((bot.x-self.x)**2) + ((bot.y-self.y)**2))/(2*(400**2))
+				surr['r'] = surr['r']+(((bot.x-self.x)**2) + ((bot.y-self.y)**2))/(2*(self.canvas.winfo_width()**2))
 			if bot.y < self.y:
-				surr['u'] = surr['u']+(((bot.x-self.x)**2) + ((bot.y-self.y)**2))/(2*(400**2))
+				surr['u'] = surr['u']+(((bot.x-self.x)**2) + ((bot.y-self.y)**2))/(2*(self.canvas.winfo_height()**2))
 			else:
-				surr['d'] = surr['d']+(((bot.x-self.x)**2) + ((bot.y-self.y)**2))/(2*(400**2))
+				surr['d'] = surr['d']+(((bot.x-self.x)**2) + ((bot.y-self.y)**2))/(2*(self.canvas.winfo_height()**2))
 		threshold = 20
 		if True:
 		# if self.x > 400-threshold:
