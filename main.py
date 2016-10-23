@@ -4,14 +4,18 @@ from bot import Bot
 import random
 
 frame = 0
+stopped = False
 def animator(bots):
+	global stopped
 	global frame
 	collision_check = {}
 	restart = False
 	bot_healths = ""
+	if stopped:
+		return
 	for bot in bots:
-		if bot.health < 0:
-			continue
+		# if bot.health < 0:
+		# 	continue
 		restart = True
 		# print ' bot '+bot.name, bot.health
 		bot_healths = bot_healths + bot.name + ':' + "%7.2f"%bot.health + ' '
@@ -93,6 +97,13 @@ def animator(bots):
 			bot.reset_collisions()
 		if bot.scale < 90:
 			bot.scale = bot.scale+0.01
+		if bot.health < 0:
+			sbots = sorted(bots, key=lambda x: x.health, reverse=True)
+			print "Combining bots %s and %s to bot %s"%(sbots[0].name, sbots[1].name, bot.name)
+			bot.assign_avg_nn(sbots[0].nnet,sbots[1].nnet, sess)
+			bot.health = sbots[0].health/2 + sbots[1].health/2 + random.random()*20
+			# s_bots = bots.
+			# bot.canvas.delete(bot.character)
 	print bot_healths
 	if restart:
 		canvas.after(1, animator,bots)
@@ -151,6 +162,7 @@ for i in xrange(15):
 print 'Setting up done'
 
 sess.run(tf.initialize_all_variables())
+train_writer = tf.train.SummaryWriter('./train', sess.graph)
 animator(bots)
 # canvas.after(100, test, bots)
 root.mainloop()

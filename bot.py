@@ -3,7 +3,7 @@ import math
 import tensorflow as tf
 
 class Bot(Physics):
-	def __init__(self, x, y, radius, scale, canvas, name='1', color='blue', health = 100000.0):
+	def __init__(self, x, y, radius, scale, canvas, name='1', color='blue', health = 10.0):
 		super(Bot,self).__init__(scale, x, y)
 		self.canvas = canvas
 		self.character = self.canvas.create_oval(x-radius, y-radius, x+radius, y+radius, outline='white', fill=color)
@@ -29,8 +29,7 @@ class Bot(Physics):
 		self.canvas.move(self.character, new_pos[0] - old_pos[0], new_pos[1] - old_pos[1])
 		self.canvas.update()
 		self.health = self.health - 0.01
-		if self.health < 0:
-			self.canvas.delete(self.character)
+		
 
 	def collide(self, arg, obj=None):
 		super(Bot, self).collide(arg, obj)
@@ -84,24 +83,38 @@ class Bot(Physics):
 		self.move()
 		# self.canvas.after(1000/60, self.animate)
 
+	def assign_avg_nn(self, nnet1, nnet2, session):
+		for k in self.nnet.keys():
+			if isinstance(self.nnet[k], tf.Variable):
+				session.run(self.nnet[k].assign(nnet1[k].eval(session=session)/2+nnet2[k].eval(session=session)/2))
+
 	def setup_nn(self):
 		input_size = 9
 		layers = [8,8,8,8,8]
 		output_size = 6
+		self.nnet = {}
 		with tf.variable_scope('bot_'+self.name):
 			input = tf.placeholder(tf.float32, shape=[None,input_size], name="input")
+			self.nnet['input'] = input
 			score = tf.placeholder(tf.float32,shape=[None,output_size], name="score")
+			self.nnet['score'] = score
 			prev_input = input
 			for i, size in enumerate(layers):
-				w = tf.Variable(tf.random_uniform([input_size,size]), name="hidden_"+str(i))
-				b = tf.Variable(tf.random_uniform([size]), name="hidden_"+str(i))
+				w = tf.Variable(tf.random_uniform([input_size,size]), name="hidden_w_"+str(i))
+				self.nnet["hidden_w_"+str(i)] = w
+				b = tf.Variable(tf.random_uniform([size]), name="hidden_b_"+str(i))
+				self.nnet["hidden_b_"+str(i)] = b
 				output = tf.sigmoid(tf.matmul(prev_input,w)+b)
+				self.nnet["output_"+str(i)] = output
 				prev_input = output
 				input_size = size
 			
 			ws = tf.Variable(tf.zeros([input_size,output_size]))
+			self.nnet["hidden_ws"] = ws
 			bs = tf.Variable(tf.zeros([output_size]))
+			self.nnet["hidden_bs"] = bs
 			pred = tf.nn.softmax(tf.matmul(output,ws)+bs)
+			self.nnet["output_pred"] = pred
 			optimizer = tf.train.AdagradOptimizer(0.1)
 
 			loss_m = tf.reduce_mean(-tf.reduce_sum(score * tf.log(tf.maximum(pred,pred + 1e-10)), reduction_indices=[1]))
