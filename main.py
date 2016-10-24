@@ -131,38 +131,76 @@ def test(bots):
 
 
 
-root = Tk()
-bottom = Frame(root)
-bottom.pack(side=BOTTOM, fill=BOTH, expand=True)
-# f = Frame(root, height=400, width=400)
-# f.pack_propagate(0)
-# f.pack()
-canvas = Canvas(root, width=1280, height = 720)
-# f = Frame(root, height=30, width=400)
-# f.pack_propagate(0)
-# f.pack()
-canvas.pack()
-import random
+import sys, pygame
+pygame.init()
+
+size = width, height = 1280, 720
+speed = [2, 2]
+black = 255, 255, 255
+
+screen = pygame.display.set_mode(size)
+
+ball = pygame.transform.scale(pygame.image.load("utils/animat1.png"), (50, 50))
+ballrect = ball.get_rect()
+
+# while 1:
+# 	for event in pygame.event.get():
+# 		if event.type == pygame.QUIT: sys.exit()
+
+# 	ballrect = ballrect.move(speed)
+# 	if ballrect.left < 0 or ballrect.right > width:
+# 		speed[0] = -speed[0]
+# 	if ballrect.top < 0 or ballrect.bottom > height:
+# 		speed[1] = -speed[1]
+
+# 	screen.fill(black)
+# 	screen.blit(ball, ballrect)
+# 	pygame.display.flip()
+
+
+# root = Tk()
+# bottom = Frame(root)
+# bottom.pack(side=BOTTOM, fill=BOTH, expand=True)
+# # f = Frame(root, height=400, width=400)
+# # f.pack_propagate(0)
+# # f.pack()
+# canvas = Canvas(root, width=1280, height = 720)
+# # f = Frame(root, height=30, width=400)
+# # f.pack_propagate(0)
+# # f.pack()
+# canvas.pack()
+# import random
 bots = []
-print 'Setting up'
+# print 'Setting up'
 colors = ['#f00','#0f0','#00f','#ff0','#f0f','#0ff','#fff','#000','#800','#080','#008','#880','#808','#088','#888']
 from functools import partial
 def delete_bot(bot):
 	canvas.delete(bot.character)
 	bots.remove(bot)
-for i in xrange(15):
-	bot = Bot(50+(i%2)*100 + i/5*200, (i%5)*90, 20, 1, canvas, str(i), color=colors[i])
-	action_with_arg = partial(delete_bot,bot)
-	b = Button(bottom, text="OK", command=action_with_arg, bg=colors[i])
-	b.grid(row=0,column=i)
-	bot.add_fx(0.1)
-	bot.add_fy(0.1)
-	bot.setup_nn()
+for i in xrange(1):
+	bot = Bot(10, 10, 50, 1, screen, str(i), color=colors[i])
+# 	action_with_arg = partial(delete_bot,bot)
+# 	# b = Button(bottom, text="OK", command=action_with_arg, bg=colors[i])
+# 	# b.grid(row=0,column=i)
+	bot.add_fx(10)
+	bot.add_fy(10)
+# 	# bot.setup_nn()
 	bots.append(bot)
-print 'Setting up done'
+# 	pygame.display.flip()
 
-sess.run(tf.initialize_all_variables())
-train_writer = tf.train.SummaryWriter('./train', sess.graph)
-animator(bots)
-# canvas.after(100, test, bots)
-root.mainloop()
+while 1:
+	for event in pygame.event.get():
+		if event.type == pygame.QUIT: sys.exit()
+	screen.fill(black)
+	for bot in bots:
+		bot.move()
+	pygame.display.flip()
+
+
+# print 'Setting up done'
+
+# sess.run(tf.initialize_all_variables())
+# train_writer = tf.train.SummaryWriter('./train', sess.graph)
+# animator(bots)
+# # canvas.after(100, test, bots)
+# root.mainloop()

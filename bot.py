@@ -1,34 +1,44 @@
 from physics import Physics
 import math
 import tensorflow as tf
+import pygame
+import numpy as np
 
 class Bot(Physics):
-	def __init__(self, x, y, radius, scale, canvas, name='1', color='blue', health = 10.0):
+	def __init__(self, x, y, radius, scale, screen, name='1', color='blue', health = 10.0):
 		super(Bot,self).__init__(scale, x, y)
-		self.canvas = canvas
-		self.character = self.canvas.create_oval(x-radius, y-radius, x+radius, y+radius, outline='white', fill=color)
-		self.canvas.pack()
+		self.screen = screen
+		self.character = pygame.transform.scale(pygame.image.load("utils/animat1.png"), (radius, radius))
+		self.rect = self.character.get_rect()
 		self.radius = radius
 		self.name = name
 		self.collisions = 0
 		self.health = health
 
 	def move(self):
-		old_pos = self.get_pos()
-
-		if old_pos[0] > self.canvas.winfo_width() and self.velx > 0:
+		old_pos = np.asarray(self.get_pos())*5
+		width, height = self.screen.get_size()
+		print width, height, old_pos[0], old_pos[1]
+		if old_pos[0] > width and self.velx > 0:
 			self.collide(0)
 		if old_pos[0] < 0 and self.velx < 0:
 			self.collide(0)
-		if old_pos[1] > self.canvas.winfo_height() and self.vely > 0:
+		if old_pos[1] > height and self.vely > 0:
 			self.collide(90)
 		if old_pos[1] < 0 and self.vely < 0:
 			self.collide(-90)
 
 		new_pos = Physics.move(self)
-		self.canvas.move(self.character, new_pos[0] - old_pos[0], new_pos[1] - old_pos[1])
-		self.canvas.update()
+
+		print self.speed(), self.rect.left, self.rect.right, self.rect.top, self.rect.bottom
+		self.rect = self.rect.move(self.speed())
+		self.screen.blit(self.character, self.rect)
+		pygame.display.flip()
+
 		self.health = self.health - 0.01
+
+	def speed(self):
+		return self.velx, self.vely
 		
 
 	def collide(self, arg, obj=None):
@@ -40,27 +50,28 @@ class Bot(Physics):
 
 	def surroundings(self, bots):
 		surr = {'l':0, 'r':0, 'u':0, 'd':0}
+		width, height = self.screen.get_size()
 		for bot in bots:
 			if bot == self:
 				continue
 			if bot.x < self.x:
-				surr['l'] = surr['l']+(((bot.x-self.x)**2) + ((bot.y-self.y)**2))/(2*(self.canvas.winfo_width()**2))
+				surr['l'] = surr['l']+(((bot.x-self.x)**2) + ((bot.y-self.y)**2))/(2*(width**2))
 			else:
-				surr['r'] = surr['r']+(((bot.x-self.x)**2) + ((bot.y-self.y)**2))/(2*(self.canvas.winfo_width()**2))
+				surr['r'] = surr['r']+(((bot.x-self.x)**2) + ((bot.y-self.y)**2))/(2*(width**2))
 			if bot.y < self.y:
-				surr['u'] = surr['u']+(((bot.x-self.x)**2) + ((bot.y-self.y)**2))/(2*(self.canvas.winfo_height()**2))
+				surr['u'] = surr['u']+(((bot.x-self.x)**2) + ((bot.y-self.y)**2))/(2*(height**2))
 			else:
-				surr['d'] = surr['d']+(((bot.x-self.x)**2) + ((bot.y-self.y)**2))/(2*(self.canvas.winfo_height()**2))
+				surr['d'] = surr['d']+(((bot.x-self.x)**2) + ((bot.y-self.y)**2))/(2*(height**2))
 		threshold = 20
 		if True:
 		# if self.x > 400-threshold:
-			surr['r'] = surr['r']+(self.x)/self.canvas.winfo_width()
+			surr['r'] = surr['r']+(self.x)/width
 		# if self.x < threshold:
-			surr['l'] = surr['l']+(self.canvas.winfo_width()-self.x)/self.canvas.winfo_width()
+			surr['l'] = surr['l']+(width-self.x)/width
 		# if self.y > 400-threshold:
-			surr['d'] = surr['d']+(self.y)/self.canvas.winfo_height()
+			surr['d'] = surr['d']+(self.y)/height
 		# if self.y < threshold:
-			surr['u'] = surr['u']+(self.canvas.winfo_height()-self.y)/self.canvas.winfo_height()
+			surr['u'] = surr['u']+(height-self.y)/height
 		return surr
 
 	def collision_detect(self, obj):
@@ -81,7 +92,7 @@ class Bot(Physics):
 
 	def animate(self):
 		self.move()
-		# self.canvas.after(1000/60, self.animate)
+		# self.screen.after(1000/60, self.animate)
 
 	def assign_avg_nn(self, nnet1, nnet2, session):
 		for k in self.nnet.keys():
