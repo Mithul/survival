@@ -129,7 +129,6 @@ screen = pygame.display.set_mode(size)
 bots = []
 print 'Setting up'
 colors = ['#f00','#0f0','#00f','#ff0','#f0f','#0ff','#fff','#000','#800','#080','#008','#880','#808','#088','#888']
-from functools import partial
 def delete_bot(bot):
 	canvas.delete(bot.character)
 	bots.remove(bot)
