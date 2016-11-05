@@ -5,10 +5,10 @@ import pygame
 import numpy as np
 
 class Bot(Physics):
-	def __init__(self, x, y, radius, scale, screen, name='1', color='blue', health = 10.0):
+	def __init__(self, x, y, radius, scale, screen, name='1', color='blue', health = 100.0):
 		super(Bot,self).__init__(scale, x, y)
 		self.screen = screen
-		self.character = pygame.transform.scale(pygame.image.load("utils/animat1.png"), (radius, radius))
+		self.character = pygame.transform.scale(pygame.image.load("utils/animat1.png"), (radius*2, radius*2))
 		self.rect = self.character.get_rect()
 		self.radius = radius
 		self.name = name
@@ -16,24 +16,25 @@ class Bot(Physics):
 		self.health = health
 
 	def move(self):
-		old_pos = np.asarray(self.get_pos())*5
+		old_pos = self.get_pos()
 		width, height = self.screen.get_size()
-		print width, height, old_pos[0], old_pos[1]
-		if old_pos[0] > width and self.velx > 0:
+		# print width, height, old_pos[0], old_pos[1]
+		if old_pos[0]+self.radius > width and self.velx > 0:
 			self.collide(0)
-		if old_pos[0] < 0 and self.velx < 0:
+		if old_pos[0]-self.radius < 0 and self.velx < 0:
 			self.collide(0)
-		if old_pos[1] > height and self.vely > 0:
+		if old_pos[1]+self.radius > height and self.vely > 0:
 			self.collide(90)
-		if old_pos[1] < 0 and self.vely < 0:
+		if old_pos[1]-self.radius < 0 and self.vely < 0:
 			self.collide(-90)
 
 		new_pos = Physics.move(self)
 
-		print self.speed(), self.rect.left, self.rect.right, self.rect.top, self.rect.bottom
-		self.rect = self.rect.move(self.speed())
+
+		# print self.speed(), self.rect.left, self.rect.right, self.rect.top, self.rect.bottom, ((self.rect.right + self.rect.left)/2)/(old_pos[0]/5)
+		self.rect.center=self.get_pos()
+		
 		self.screen.blit(self.character, self.rect)
-		pygame.display.flip()
 
 		self.health = self.health - 0.01
 
@@ -101,7 +102,7 @@ class Bot(Physics):
 
 	def setup_nn(self):
 		input_size = 9
-		layers = [8,8,8,8,8]
+		layers = [10]
 		output_size = 6
 		self.nnet = {}
 		with tf.variable_scope('bot_'+self.name):

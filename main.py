@@ -2,6 +2,7 @@ from Tkinter import *
 import time
 from bot import Bot
 import random
+from termcolor import colored
 
 frame = 0
 stopped = False
@@ -18,7 +19,12 @@ def animator(bots):
 		# 	continue
 		restart = True
 		# print ' bot '+bot.name, bot.health
-		bot_healths = bot_healths + bot.name + ':' + "%7.2f"%bot.health + ' '
+		if bot.health > 80:
+			bot_healths = bot_healths + bot.name + ':' + colored("%7.2f"%bot.health,'green') + ' '
+		elif bot.health < 20:
+			bot_healths = bot_healths + bot.name + ':' + colored("%7.2f"%bot.health,'red') + ' '
+		else:
+			bot_healths = bot_healths + bot.name + ':' + "%7.2f"%bot.health + ' '
 		collision_check[bot] = []
 		for bot1 in bots:
 			if bot1.health < 0:
@@ -102,34 +108,14 @@ def animator(bots):
 			print "Combining bots %s and %s to bot %s"%(sbots[0].name, sbots[1].name, bot.name)
 			bot.assign_avg_nn(sbots[0].nnet,sbots[1].nnet, sess)
 			bot.health = sbots[0].health/2 + sbots[1].health/2 + random.random()*20
-			# s_bots = bots.
 			# bot.canvas.delete(bot.character)
-	print bot_healths
+	print 'Health : ',bot_healths
 	if restart:
-		canvas.after(1, animator,bots)
+		pass
+		# canvas.after(1, animator,bots)
 import tensorflow as tf
 import numpy as np
 sess = tf.Session()
-def test(bots):
-	nn_input = []
-	for bot in bots:
-		surr = bot.surroundings(bots)
-		nn_input = [[bot.velx, bot.vely, bot.fx, bot.fy, bot.health/100, surr['l'], surr['u'], surr['r'], surr['d']]]
-		res = sess.run([bot.thrusters], {bot.input_nn: nn_input})
-		bot.add_fx(res[0][0][0])
-		bot.add_fy(res[0][0][1])
-		if bot.collisions > 0:
-			nn_input = [[bot.velx, bot.vely, bot.fx, bot.fy, bot.health/100, surr['l'], surr['u'], surr['r'], surr['d']]]
-			import pdb
-			res = sess.run([bot.thrusters, bot.train_step, bot.loss, bot.input_nn], {bot.input_nn: nn_input, bot.score: np.reshape(np.asarray([-bot.fx, -bot.fy]),[-1,2])})
-			bot.add_fx(res[0][0][0])
-			bot.add_fy(res[0][0][1])
-			print bot.name, bot.collisions, res[0][0], res[2], res[3][0]
-			bot.reset_collisions()
-			
-	canvas.after(100, test, bots)
-
-
 
 import sys, pygame
 pygame.init()
@@ -140,67 +126,30 @@ black = 255, 255, 255
 
 screen = pygame.display.set_mode(size)
 
-ball = pygame.transform.scale(pygame.image.load("utils/animat1.png"), (50, 50))
-ballrect = ball.get_rect()
-
-# while 1:
-# 	for event in pygame.event.get():
-# 		if event.type == pygame.QUIT: sys.exit()
-
-# 	ballrect = ballrect.move(speed)
-# 	if ballrect.left < 0 or ballrect.right > width:
-# 		speed[0] = -speed[0]
-# 	if ballrect.top < 0 or ballrect.bottom > height:
-# 		speed[1] = -speed[1]
-
-# 	screen.fill(black)
-# 	screen.blit(ball, ballrect)
-# 	pygame.display.flip()
-
-
-# root = Tk()
-# bottom = Frame(root)
-# bottom.pack(side=BOTTOM, fill=BOTH, expand=True)
-# # f = Frame(root, height=400, width=400)
-# # f.pack_propagate(0)
-# # f.pack()
-# canvas = Canvas(root, width=1280, height = 720)
-# # f = Frame(root, height=30, width=400)
-# # f.pack_propagate(0)
-# # f.pack()
-# canvas.pack()
-# import random
 bots = []
-# print 'Setting up'
+print 'Setting up'
 colors = ['#f00','#0f0','#00f','#ff0','#f0f','#0ff','#fff','#000','#800','#080','#008','#880','#808','#088','#888']
 from functools import partial
 def delete_bot(bot):
 	canvas.delete(bot.character)
 	bots.remove(bot)
-for i in xrange(1):
-	bot = Bot(10, 10, 50, 1, screen, str(i), color=colors[i])
-# 	action_with_arg = partial(delete_bot,bot)
-# 	# b = Button(bottom, text="OK", command=action_with_arg, bg=colors[i])
-# 	# b.grid(row=0,column=i)
-	bot.add_fx(10)
-	bot.add_fy(10)
-# 	# bot.setup_nn()
+for i in xrange(15):
+	bot = Bot(100+i*120, 120, 20, 0.5, screen, str(i))
+	# bot.add_fx(10*i+10)
+	# bot.add_fy(10*i+10)
+	bot.setup_nn()
 	bots.append(bot)
-# 	pygame.display.flip()
 
+sess.run(tf.initialize_all_variables())
+clock = pygame.time.Clock()
 while 1:
 	for event in pygame.event.get():
 		if event.type == pygame.QUIT: sys.exit()
 	screen.fill(black)
-	for bot in bots:
-		bot.move()
+	animator(bots)
+	clock.tick(30)
 	pygame.display.flip()
+	print 'FPS ',clock.get_fps()
+print 'Setting up done'
 
-
-# print 'Setting up done'
-
-# sess.run(tf.initialize_all_variables())
 # train_writer = tf.train.SummaryWriter('./train', sess.graph)
-# animator(bots)
-# # canvas.after(100, test, bots)
-# root.mainloop()

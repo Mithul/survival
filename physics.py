@@ -20,7 +20,7 @@ class Physics(object):
 	def get_time(self):
 		td = time.time()-self.last_moved
 		self.last_moved = time.time()
-		return 0.1#float(td*self.scale)
+		return 0.1*self.scale#float(td*self.scale)
 
 	def move(self):
 		t = self.get_time()
